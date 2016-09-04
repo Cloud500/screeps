@@ -1,7 +1,6 @@
 var roleHarvester = require('role.harvester');
 var roleUpgrader = require('role.upgrader');
 var roleBuilder = require('role.builder');
-
 module.exports.loop = function () {
 	
 	    for(var name in Memory.creeps) {
@@ -10,7 +9,6 @@ module.exports.loop = function () {
             console.log('Clearing non-existing creep memory:', name);
         }
     }
-
     var harvesters = _.filter(Game.creeps, (creep) => creep.memory.role == 'harvester');
     console.log('Harvesters: ' + harvesters.length);
 
