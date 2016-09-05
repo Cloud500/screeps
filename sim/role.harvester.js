@@ -41,11 +41,12 @@ function random_move() {
 function creep_move(creep) {
     if(creep.memory.work == 'move_to_home'
             && Game.getObjectById(creep.memory.home).energy == Game.getObjectById(creep.memory.home).energyCapacity) {
-        creep.say('Idle');
+        //creep.say('Idle');
         creep.move(random_move());
     }
     else if(creep.memory.work == 'move_to_home') {
         if(!creep.pos.inRangeTo(Game.getObjectById(creep.memory.target), 1)) {
+            //need_road(creep);
             creep.moveTo(Game.getObjectById(creep.memory.target));
         }
         else {
@@ -56,6 +57,7 @@ function creep_move(creep) {
     }
     else if(creep.memory.work == 'move_to_source') {
         if(!creep.pos.inRangeTo(Game.getObjectById(creep.memory.target), 1)) {
+            //need_road(creep);
             creep.moveTo(Game.getObjectById(creep.memory.target));
         }
         else {
@@ -63,6 +65,19 @@ function creep_move(creep) {
             creep.say('Harvest');
             creep_harvest(creep);
         }
+    }
+}
+
+function need_road(creep) {
+    var road = false;
+    var look = creep.room.lookAt(creep);
+    look.forEach(function(lookObject) {
+        if((lookObject.type == LOOK_STRUCTURES && lookObject[LOOK_STRUCTURES].structureType == STRUCTURE_ROAD) || lookObject.type == LOOK_CONSTRUCTION_SITES) {
+            road = true
+        }
+    });
+    if(road == false) {
+        creep.room.createConstructionSite(creep.pos, STRUCTURE_ROAD);
     }
 }
 

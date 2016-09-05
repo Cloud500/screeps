@@ -8,13 +8,13 @@
  var SourceMemory = require("SourceMemory");
  */
 
+//console.log("Creating source memory...");
 
-/**Create memory for energy sources.
 if(Memory.sources == undefined)
     Memory.sources = { };
 
 Source.prototype.memory = Memory.sources[this.id];
- **/
+
 Object.defineProperty(Source.prototype, 'memory', {
     get: function() {
         if(_.isUndefined(Memory.sources)) {

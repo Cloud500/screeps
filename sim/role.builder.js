@@ -24,8 +24,10 @@ var roleBuilder = {
             }
         }
         else {
-            if(creep.withdraw(Game.getObjectById(creep.memory.home), RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(Game.getObjectById(creep.memory.home));
+            if(Game.getObjectById(creep.memory.home).energy >  200 ) {
+                if(creep.withdraw(Game.getObjectById(creep.memory.home), RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(Game.getObjectById(creep.memory.home));
+                }
             }
         }
     }
