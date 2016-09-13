@@ -128,7 +128,7 @@ module.exports = function() {
             }
         }
     }
-    
+
     function log(deep, array) {
         if (deep <= logging && deep > 0 && logging > 0) {
             log_write(array);
@@ -392,6 +392,7 @@ function add_drops_energy() {
         }
 
         var all_energy = Game.rooms[room_name].find(FIND_DROPPED_ENERGY);
+        
         for(var i in all_energy) {
             if(!Memory.rooms[room_name].drops.energy[all_energy[i].id]) {
                 Memory.rooms[room_name].drops.energy[all_energy[i].id] = all_energy[i];

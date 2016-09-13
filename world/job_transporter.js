@@ -1,4 +1,6 @@
 //log -52
+
+var move = require('move');
 module.exports = function(name) {
 
     log(-52,['Transporter ', name, ' ablauf']);
@@ -15,7 +17,7 @@ module.exports = function(name) {
                     transporter.target = find_next_stok(creep.room.name);
                     transporter.typ = 'stock';
                     //Wenn kein Lager gefunden, schauen ob es sich lohnt weiter energie zu sammeln
-                    if(transporter.target == false &&creep.carry.energy < creep.carryCapacity) {
+                    if(transporter.target == false && creep.carry.energy < creep.carryCapacity) {
                         log(-52,['Kein Lager gefunden, suche Source']);
                         transporter.target = find_next_collect_target(creep.room.name);
                         transporter.typ = 'source';
@@ -37,7 +39,8 @@ module.exports = function(name) {
                 else if (creep.pos.getRangeTo(gobi(transporter.target).pos) > 1) {
                     log(-52,['Entfernung zum Target: ', creep.pos.getRangeTo(gobi(transporter.target).pos)]);
                     log(-52,['Creep bewegt sich zum Target ', transporter.target]);
-                    creep.moveTo(gobi(transporter.target).pos);
+                    //creep.moveTo(gobi(transporter.target).pos);
+                    move.goTo(creep, gobi(transporter.target))
                 }
                 else{
                     if(transporter.typ == 'stock') {
@@ -51,6 +54,12 @@ module.exports = function(name) {
                         transporter.target = false;
                     }
                 }
+            }
+        }
+        if(calc_spawn_time(transporter.room, PARTS_TRANSPORTER) + 10 >= creep.ticksToLive) {
+            if(transporter.replacementOrder == false) {
+                console.log('Transporter ' + name + ' Stirbt bald');
+                transporter.replacementOrder = create(transporter.room, JOB_TRANSPORTER, calc_spawn_tier(transporter.room, PARTS_TRANSPORTER), 0)
             }
         }
     }
@@ -108,23 +117,30 @@ function find_next_stok(room_name) {
 
     log(-52,['Suche Upgrader']);
     //Fülle Upgrader die leerer als 1/3 sind
-    for(var name in Memory.workers.upgrader) {
+    for(var i in Memory.rooms[room_name].worker.upgrader) {
+        log(-52,['name ', Memory.rooms[room_name].worker.upgrader[i]]);
         //var upgrader = Memory.workers.upgrader[name];
-        var creep = Game.creeps[name];
-        log(-52,['creep ', ots(creep)]);
-        if(creep.room.name == room_name && creep.carry.energy < creep.carryCapacity / 3) {
-            log(-52,['Upgrader gefunden schaue ob schon verplant', ots(creep.id)]);
-            var besetzt = false;
-            for(var name_transporter in Memory.workers.transporter) {
-                var transporter = Memory.workers.transporter[name_transporter];
-                if (transporter.target == creep.id) {
-                    log(-52,['Upgrader besetzt ']);
-                    besetzt = true;
+        var creep = Game.creeps[Memory.rooms[room_name].worker.upgrader[i]];
+        if(creep) {
+            log(-52,['creep ', ots(creep)]);
+            if(creep.room.name == room_name && creep.carry.energy < creep.carryCapacity / 3) {
+                log(-52,['Upgrader gefunden schaue ob schon verplant', ots(creep.id)]);
+                var besetzt = false;
+                for(var i in Memory.rooms[room_name].worker.transporter) {
+                    var name = Memory.rooms[room_name].worker.transporter[i]
+                    var transporter = Memory.creeps[name];
+
+
+
+                    if (transporter.target == creep.id) {
+                        log(-52,['Upgrader besetzt ']);
+                        besetzt = true;
+                    }
                 }
-            }
-            if(besetzt == false) {
-                log(-52,['Upgrader gefunden ', ots(creep.id)]);
-                return creep.id;
+                if(besetzt == false) {
+                    log(-52,['Upgrader gefunden ', ots(creep.id)]);
+                    return creep.id;
+                }
             }
         }
     }

@@ -1,4 +1,7 @@
 //log -54
+
+var move = require('move');
+
 module.exports = function(name) {
     log(-54,['Builder ', name, ' ablauf']);
     var builder = Memory.creeps[name];
@@ -38,7 +41,8 @@ module.exports = function(name) {
                 else if (creep.pos.getRangeTo(gobi(builder.target).pos) > 1) {
                     log(-54,['Entfernung zum Target: ', creep.pos.getRangeTo(gobi(builder.target).pos)]);
                     log(-54,['Creep bewegt sich zum Target ', builder.target]);
-                    creep.moveTo(gobi(builder.target).pos);
+                    //creep.moveTo(gobi(builder.target).pos);
+                    move.goTo(creep, gobi(builder.target));
                 }
                 else {
                     if(builder.typ == 'stock') {
@@ -52,6 +56,12 @@ module.exports = function(name) {
                         builder.target = false;
                     }
                 }
+            }
+        }
+        if(calc_spawn_time(builder.room, PARTS_BUILDER) + 10 >= creep.ticksToLive) {
+            if(builder.replacementOrder == false) {
+                console.log('Builder ' + name + ' Stirbt bald');
+                builder.replacementOrder = create(builder.room, JOB_BUILDER, calc_spawn_tier(builder.room, PARTS_BUILDER), 0)
             }
         }
     }

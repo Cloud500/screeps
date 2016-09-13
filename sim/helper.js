@@ -1,135 +1,79 @@
-//log -2
+"use strict"
+const helper = {
 
-/**
- * Generell bekommen Creeper im Memory:
- * job => den job für den sie erstellt wurden
- * target => das aktuelle ziel; false wenn idle => mal string mal objekt aber immer min die ID
- * transporter ham noch den Transportyp (energie oder reessourcen)
- *
- */
+    firstRun() {
+        Game.getLength = function(oTmpObject)
+        {
+            var iLength = 0;
 
-//TODO clean_sources und upgrade_sources hinzufügen
-//TODO beim Upgraden der sources bezüglich protected planen
+            for (var sKey in oTmpObject)
+            {
+                if (oTmpObject.hasOwnProperty(sKey)) iLength++;
+            }
+            return iLength;
+        };
 
-/**
- *
- * @returns {{check_memory: check_memory, gobi: Function, add_creep_count: add_creep_count, build_structure: build_structure, clean_structure: clean_structure, upgrade_structure: upgrade_structure, get_new_id: get_new_id, remove_id: remove_id, log: log, ots: ots}}
- */
-module.exports = function() {
-    var check_memory = function() {
         if (!String.prototype.includes) {
             String.prototype.includes = function() {
                 'use strict';
                 return String.prototype.indexOf.apply(this, arguments) !== -1;
             };
         }
-
-        if(!Memory.statistic) {
-            Memory.statistic = {};
-        }
-
-        if(!Memory.statistic.creeps) {
-            Memory.statistic.creeps = 0;
-        }
-
-        if(!Memory.rooms) {
-            Memory.rooms = {};
-        }
-        if(!Memory.spawns) {
-            Memory.spawns = {};
-        }
-
-        if(!Memory.cities) {
-            Memory.cities = {};
-        }
-        if(!Memory.outposts) {
-            Memory.outposts = {};
-        }
-        //TODO Alle Jobs hinzufügen
-        if(!Memory.workers) {
-            Memory.workers = {};
-        }
-        if(!Memory.workers.miner) {
-            Memory.workers.miner = {};
-        }
-        if(!Memory.workers.transporter) {
-            Memory.workers.transporter = {};
-        }
-        if(!Memory.workers.upgrader) {
-            Memory.workers.upgrader = {};
-        }
-        if(!Memory.workers.builder) {
-            Memory.workers.builder = {};
-        }
-
-
-        if (!Memory.squads) {
-            Memory.squads = {};
-        }
         if(!Memory.ids){
             Memory.ids = [];
         }
-        //TODO Diplomatie einfügen
-        if (!Memory.diplomacy) {
-            Memory.diplomacy = {};
-        }
-        if (!Memory.diplomacy.neutral) {
-            Memory.diplomacy.neutral = {};
-        }
-        if (!Memory.diplomacy.alliances) {
-            Memory.diplomacy.alliances = {};
-        }
-        if (!Memory.diplomacy.enemies) {
-            Memory.diplomacy.enemies = {};
-        }
-    };
 
-    function add_creep_count(){
-        return Memory.lastId++;
-    }
 
-    function build_structure() {
-        add_rooms();
-        add_creeps();
-        add_spawns();
-        add_sources();
-        add_drops_energy();
-    }
+        global.add_sources = add_sources;
+    },
 
-    function clean_structure() {
-        clean_rooms();
-        clean_creeps();
-        clean_spawns();
-        clean_drops_energy();
-    }
-
-    function upgrade_structure() {
-        upgrade_controller();
-        upgrade_creeps();
-        upgrade_drops_energy();
-    }
-
-    function get_new_id() {
-        var id_neu = make_id();
-
-        for(var id in Memory.ids) {
-            if(Memory.ids[id] == id_neu) {
-                return get_new_id()
-            }
-        }
-        Memory.ids[Memory.ids.length] = id_neu;
-        return id_neu
-    }
-
-    function remove_id(id) {
-        for(var i in Memory.ids) {
-            if(Memory.ids[i] == id) {
-                delete Memory.ids[i];
-            }
-        }
-    }
+    findNearestStructure(creep, structureType) {
+        return creep.pos.findClosestByRange(FIND_STRUCTURES,
+            {
+                filter: function (structure) {
+                    return structure.structureType == structureType;
+                }
+            });
+    },
     
-    function log(deep, array) {
+    findNearestFullContainer(creep) {
+        return creep.pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: function (object) {
+                return object.structureType == STRUCTURE_CONTAINER && object.store[RESOURCE_ENERGY] > 0;
+            }
+        });
+    },
+
+    findNearestEmptyContainer(creep) {
+        return creep.pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: function (object) {
+                return object.structureType == STRUCTURE_CONTAINER && _.sum(object.store) < object.storeCapacity;
+            }
+        });
+    },
+
+
+    findNearestEmptyStructure(creep, structureType) {
+        return creep.pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: function (object) {
+                return object.structureType == structureType && _.sum(object.store) < object.storeCapacity;
+            }
+        });
+    },
+
+    findNearestFullStructure(creep, structureType) {
+        return creep.pos.findClosestByRange(FIND_STRUCTURES, {
+            filter: function (object) {
+                return object.structureType == structureType && object.store[RESOURCE_ENERGY] > 0;
+            }
+        });
+    },
+
+    ots(obj) {
+    return JSON.stringify(obj);
+    },
+
+    log(deep, array) {
         if (deep <= logging && deep > 0 && logging > 0) {
             log_write(array);
             return;
@@ -140,37 +84,44 @@ module.exports = function() {
                 return;
             }
         }
-    }
-    function log_write(array) {
-        var string = '';
-        for(var i in array) {
-            string = string + array[i];
+    },
+    
+    gobi(id) {
+        return Game.getObjectById(id);
+    },
+
+     get_new_id() {
+        var id_neu = make_id();
+
+        for(var id in Memory.ids) {
+            if(Memory.ids[id] == id_neu) {
+                return get_new_id()
+            }
         }
-        console.log(string);
-    }
+        Memory.ids[Memory.ids.length] = id_neu;
+        return id_neu
+},
+    
+    remove_id(id) {
+        var index = Memory.ids.indexOf(id);
+        Memory.ids.splice(index, 1);
+    },
 
-    function ots(obj) {
-        return JSON.stringify(obj);
-    }
-
-    function create(room_name, code, tier, prio) {
+    create(room_name, code, tier, prio) {
         prio = prio || 0;
         var order = calc_order(code, tier, prio);
         if(!order) {
-            //nix Order
             return false;
         }
         else {
             var id = get_new_id()
-            Memory.rooms[room_name].orders.creeps[id] = order;
+            Memory.rooms[room_name].orders[id] = order;
             return id;
         }
-    }
-
-    function calc_spawn_tier(name_room, parts) {
-        var max_energy = Game.rooms[name_room].energyCapacityAvailable;
+    },
+    
+    calc_spawn_costs(parts) {
         var base_energy = 0;
-        log(-2,['max_energy: ', max_energy]);
         for(var id in parts) {
             for(var name in BODYPART_COST) {
                 if(name == parts[id]) {
@@ -178,311 +129,185 @@ module.exports = function() {
                 }
             }
         }
-        log(-2,['base_energy: ', base_energy]);
-        var tier = Math.floor(max_energy / base_energy);
-        log(-2,['Tier: ', tier]);
-        return tier;
-    }
+        return base_energy;
+    },
 
-    function calc_spawn_time(name_room, parts) {
+    calc_spawn_tier(name_room, parts) {
+        var max_energy = Game.rooms[name_room].energyCapacityAvailable;
+        var base_energy = calc_spawn_costs(parts);
+        var tier = Math.floor(max_energy / base_energy);
+        return tier;
+    },
+    
+    calc_spawn_time(name_room, parts) {
         var tier = calc_spawn_tier(name_room, parts);
         var tier_parts = add_body(tier, parts);
-
+    
         if(tier_parts.length) {
             return tier_parts.length * 3
         }
         else {
             return 150;
         }
-    }
-
-    function cpu_mon(){
-        var tail = 16;
-        Memory.CPU = Memory.CPU || [];
-        Memory.CPU[Game.time%tail] = Game.cpu.getUsed(),"of",Game.cpuLimit;
-            var avgCPU = 0;
-            for(var k in Memory.CPU) {avgCPU=avgCPU+Memory.CPU[k]; };
-            avgCPU = Math.round(avgCPU/Memory.CPU.length*100)/100;
-            var stdevCPU = 0;
-            for(var k in Memory.CPU) {stdevCPU=stdevCPU+(Memory.CPU[k]-avgCPU)*(Memory.CPU[k]-avgCPU); };
-            stdevCPU=Math.round(Math.sqrt(stdevCPU)/tail*100)/100;
-            log(2, ["CPU: ", avgCPU," +/- ", stdevCPU]);
-    };
-
-    return {
-        'check_memory': check_memory,
-        'gobi': Game.getObjectById,
-        'add_creep_count': add_creep_count,
-        'build_structure': build_structure,
-        'clean_structure': clean_structure,
-        'upgrade_structure': upgrade_structure,
-        'get_new_id': get_new_id,
-        'remove_id': remove_id,
-        'log': log,
-        'ots': ots,
-        'create': create,
-        'calc_spawn_tier': calc_spawn_tier,
-        'calc_spawn_time': calc_spawn_time,
-        'cpu_mon': cpu_mon,
-    };
-}();
-
-//TODO Alle Jobs hinzufügen
-function add_creeps() {
-    for(var name in Game.creeps) {
-        if(!Memory.creeps[name]) {
-            Memory.creeps[name] = {};
-        }
-        if(Memory.creeps[name].job == JOB_MINER) {
-            if (!Memory.workers.miner[name]){
-                Memory.workers.miner[name] = Memory.creeps[name];
-            }
-        }
-        if(Memory.creeps[name].job == JOB_TRANSPORTER) {
-            if (!Memory.workers.transporter[name]){
-                Memory.workers.transporter[name] = Memory.creeps[name];
-            }
-        }
-        if(Memory.creeps[name].job == JOB_UPGRADER) {
-            if (!Memory.workers.upgrader[name]){
-                Memory.workers.upgrader[name] = Memory.creeps[name];
-            }
-        }
-        if(Memory.creeps[name].job == JOB_BUILDER) {
-            if (!Memory.workers.builder[name]){
-                Memory.workers.builder[name] = Memory.creeps[name];
-            }
-        }
-    }
-}
-
-//TODO Alle Jobs hinzufügen
-function clean_creeps() {
-    for(var name in Memory.creeps) {
-        if(!Game.creeps[name]) {
-            delete Memory.creeps[name];
-            if(Memory.workers.miner[name]) {
-                delete Memory.workers.miner[name];
-            }
-            if(Memory.workers.transporter[name]) {
-                delete Memory.workers.transporter[name];
-            }
-            if(Memory.workers.upgrader[name]) {
-                delete Memory.workers.upgrader[name];
-            }
-            if(Memory.workers.builder[name]) {
-                delete Memory.workers.builder[name];
-            }
-        }
-    }
-}
-
-//TODO Alle Jobs hinzufügen
-function upgrade_creeps() {
-    for(var name in Memory.creeps) {
-        Memory.creeps[name].id = Game.creeps[name].id;
-        Memory.creeps[name].name = name;
-        Memory.creeps[name].room = Game.creeps[name].room.name;
-    }
-
-    for(var name_miner in Memory.workers.miner) {
-        if(Memory.creeps[name_miner]) {
-            Memory.workers.miner[name_miner] = Memory.creeps[name_miner];
-        }
-    }
-    for(var name_transporter in Memory.workers.transporter) {
-        if (Memory.creeps[name_transporter]) {
-            Memory.workers.transporter[name_transporter] = Memory.creeps[name_transporter];
-        }
-    }
-    for(var name_upgrader in Memory.workers.upgrader) {
-        if(Memory.creeps[name_upgrader]) {
-            Memory.workers.upgrader[name_upgrader] = Memory.creeps[name_upgrader];
-        }
-    }
-    for(var name_builder in Memory.workers.builder) {
-        if(Memory.creeps[name_builder]) {
-            Memory.workers.builder[name_builder] = Memory.creeps[name_builder];
-        }
-    }
-}
-
-function add_rooms() {
-    for(var name in Game.rooms) {
-        if(!Memory.rooms[name]) {
-            Memory.rooms[name] = {};
-        }
-        if(!Memory.rooms[name].orders) {
-            Memory.rooms[name].orders = {};
-        }
-        if(!Memory.rooms[name].orders.creeps) {
-            Memory.rooms[name].orders.creeps = {};
-        }
-        if(!Memory.rooms[name].controller) {
-            Memory.rooms[name].controller = {};
-        }
-    }
-}
-
-function clean_rooms() {
-    for(var name in Memory.rooms) {
-        if(!Game.rooms[name]) {
-            delete Memory.rooms[name];
-        }
-    }
-}
+    },
 
 
-function upgrade_controller() {
-    for(var name in Game.rooms) {
-        var controller = Game.rooms[name].controller;
-        Memory.rooms[name].controller.id = controller.id;
-        Memory.rooms[name].controller.level = controller.level;
-        Memory.rooms[name].controller.ticksToDowngrade = controller.ticksToDowngrade;
-    }
-}
-
-
-
-
-
-function add_spawns() {
-    for(var name in Game.spawns) {
-        var id = Game.spawns[name].id;
-        if(!Memory.spawns[id]) {
-            Memory.spawns[id] = {};
+    scanSpawns(id_spawn) {
+        if (!Memory.spawns) {
+            Memory.spawns = {};
         }
-        if(!Memory.spawns[id].id) {
-            Memory.spawns[id].id = id;
+        if(!Memory.empire.spawns) {
+            Memory.empire.spawns = 0;
         }
-        if(!Memory.spawns[id].name) {
-            Memory.spawns[id].name = name;
+        if(!Memory.spawns[id_spawn]) {
+            Memory.spawns[id_spawn] = {};
+            Memory.spawns[id_spawn].name = gobi(id_spawn).name;
+            Memory.spawns[id_spawn].order = false;
+            Memory.spawns[id_spawn].prod = false;
+            Memory.spawns[id_spawn].pos = gobi(id_spawn).pos;
+            Memory.empire.spawns++;
         }
-        if(!Memory.spawns[id].order) {
-            Memory.spawns[id].order = false;
+        if(!Memory.rooms[Memory.spawns[id_spawn].pos.roomName].spawns) {
+            Memory.rooms[Memory.spawns[id_spawn].pos.roomName].spawns = [];
         }
-        if(!Memory.spawns[id].prod) {
-            Memory.spawns[id].prod = false;
+        if (Memory.rooms[Memory.spawns[id_spawn].pos.roomName].spawns.indexOf(id_spawn) == -1) {
+            Memory.rooms[Memory.spawns[id_spawn].pos.roomName].spawns.push(id_spawn);
         }
-        
-
-    }
-}
-
-function clean_spawns() {
-    for(var id in Memory.spawns) {
-        for(var name in Game.spawns) {
-            if(!Game.spawns[name].id == id) {
-                delete Memory.spawns[id];
-            }
-        }
-    }
-}
-
-function add_drops_energy() {
-    for(var room_name in Memory.rooms) {
-        if(!Memory.rooms[room_name].drops) {
-            Memory.rooms[room_name].drops = {};
-        }
-        if(!Memory.rooms[room_name].drops.energy) {
-            Memory.rooms[room_name].drops.energy = {};
-        }
-        if(!Memory.rooms[room_name].drops.resources) {
-            Memory.rooms[room_name].drops.resources = {};
-        }
-
-        var all_energy = Game.rooms[room_name].find(FIND_DROPPED_ENERGY);
-        for(var i in all_energy) {
-            if(!Memory.rooms[room_name].drops.energy[all_energy[i].id]) {
-                Memory.rooms[room_name].drops.energy[all_energy[i].id] = all_energy[i];
-            }
-        }
-    }
-}
-
-function clean_drops_energy() {
-    for(var room_name in Memory.rooms) {
-
-        for(var drop in Memory.rooms[room_name].drops.energy) {
-
+        //TODO Wie lösche ich Spawns wenn sie verschwinden
+    },
+    
+    scanDrops(name_room) {
+        for(var drop in Memory.rooms[name_room].drops.energy) {
             var exist = gobi(drop);
             if(!exist) {
-                delete Memory.rooms[room_name].drops.energy[drop];
+                delete Memory.rooms[name_room].drops.energy[drop];
+            }
+            else {
+                Memory.rooms[name_room].drops.energy[drop] = gobi(drop);
+            }
+        }
+        add_drops_energy(name_room)
+    },
+
+    scanRoom(name_room) {
+        if (!Memory.rooms) {
+            Memory.rooms = {};
+        }
+        if(!Memory.roomCount) {
+            Memory.roomCount = 0;
+        }
+        if (!Memory.rooms[name_room]) {
+            Memory.rooms[name_room] = {};
+            Memory.rooms[name_room].sourceSpots = 0;
+            Memory.rooms[name_room].sourceSpotsSave = 0;
+            add_sources(name_room);
+            add_drops_energy(name_room);
+            //TODO Der rest
+            Memory.rooms[name_room].orders = {};
+            Memory.rooms[name_room].controler = {};
+            Memory.rooms[name_room].controler.id = Game.rooms[name_room].controller.id;
+            Memory.rooms[name_room].controler.level = Game.rooms[name_room].controller.level;
+            Memory.roomCount ++;
+        }
+        if(!Memory.rooms[name_room].worker) {
+            Memory.rooms[name_room].worker = {};
+            Memory.rooms[name_room].worker.miner = [];
+            Memory.rooms[name_room].worker.upgrader = [];
+            Memory.rooms[name_room].worker.transporter = [];
+            Memory.rooms[name_room].worker.builder = [];
+        }
+        
+        if (Game.rooms[name_room].controller.my) {
+            if (!Memory.empire) {
+                Memory.empire = {};
+                Memory.empire.citys = [];
+                Memory.empire.outposts = [];
+                Memory.empire.creeps = 0;
+                Memory.empire.spawns = 0;
+                Memory.empire.fights = 0;
+            }
+            if (Memory.empire.citys.indexOf(name_room) == -1) {
+                Memory.empire.citys.push(name_room);
+            }
+        }
+        else {
+            if (!Memory.empire) {
+                Memory.empire = {};
+                Memory.empire.citys = [];
+                Memory.empire.outposts = [];
+                Memory.empire.creeps = 0;
+                Memory.empire.fights = 0
+            }
+            else if (Memory.empire.citys.indexOf(name_room) > -1) {
+                var index = Memory.empire.citys.indexOf(name_room);
+                Memory.empire.citys.splice(index, 1);
             }
         }
     }
-}
+};
 
-function upgrade_drops_energy() {
-    for(var room_name in Memory.rooms) {
-        for(var drop in Memory.rooms[room_name].drops.energy) {
-            Memory.rooms[room_name].drops.energy[drop] = gobi(drop);
-        }
+function log_write(array) {
+    var string = '';
+    for(var i in array) {
+        string = string + array[i];
     }
+    console.log(string);
 }
 
-function add_sources() {
-    for(var name in Memory.rooms) {
-        if(!Memory.rooms[name].sources){
-            var sources = {};
-            //Alle Ressoucen auflisten
-            var all_sources = Game.rooms[name].find(FIND_SOURCES);
+function add_sources(name_room) {
+    if(!Memory.rooms[name_room].sources){
 
-            for(var i in all_sources){
-                var source = {};
+        var sources = {};
+        //Alle Ressoucen auflisten
+        var all_sources = Game.rooms[name_room].find(FIND_SOURCES);
 
-                source.id = all_sources[i].id;
+        for(var i in all_sources){
+            var source = {};
+            source.id = all_sources[i].id;
 
-                //Suche nach Keeper Lair's
-                if(all_sources[i].pos.findInRange(FIND_STRUCTURES, 5, {
-                        filter: {
-                            structureType: STRUCTURE_KEEPER_LAIR
-                        }
-                    }).length > 0) {
-                    source.lair = true;
-                    source.protected = false;
-                }
-                else{
-                    source.lair = false;
-                    source.protected = false;
-                }
+            //Suche nach Keeper Lair's
+            if(all_sources[i].pos.findInRange(FIND_STRUCTURES, 5, {
+                    filter: {structureType: STRUCTURE_KEEPER_LAIR}}).length > 0) {
+                source.lair = true;
+                source.protected = false;
+            }
+            else{
+                source.lair = false;
+                source.protected = false;
+            }
 
-                //Position der Ressource
-                source.pos = all_sources[i].pos;
+            //Position der Ressource
+            source.pos = all_sources[i].pos;
 
-                //Anzahl der plätze zum abbauen
-                source.spots = 0;
-                for(var dx=-1;dx<=1;dx++){
-                    for(var dy=-1;dy<=1;dy++){
-                        var look = Game.rooms[name].lookAt(source.pos.x+dx,source.pos.y+dy,source.pos.roomName);
-                        var string = "";
-                        source.spots++;
-                        look.forEach(function(lookObject){
-                            string = string + lookObject.type + (lookObject.terrain||"") + " ";
-                            if(lookObject.type == 'terrain' && lookObject.terrain == 'wall'){
-                                source.spots--;
-                            }
-                        });
+            //Anzahl der plätze zum abbauen
+            source.spots = 0;
+            for(var dx=-1;dx<=1;dx++){
+                for(var dy=-1;dy<=1;dy++){
+                    var look = Game.rooms[name_room].lookAt(source.pos.x+dx,source.pos.y+dy,source.pos.roomName);
+                    var string = "";
+                    source.spots++;
+                    Memory.rooms[name_room].sourceSpots++;
+
+                    if(source.lair==false) {
+                        Memory.rooms[name_room].sourceSpotsSave++;
                     }
+                    look.forEach(function(lookObject){
+                        string = string + lookObject.type + (lookObject.terrain||"") + " ";
+                        if(lookObject.type == 'terrain' && lookObject.terrain == 'wall'){
+                            source.spots--;
+                            Memory.rooms[name_room].sourceSpots--;
+                            if(source.lair==false) {
+                                Memory.rooms[name_room].sourceSpotsSave--;
+                            }
+                        }
+                    });
                 }
-                sources[all_sources[i].id] = source;
             }
-            Memory.rooms[name].sources = sources;
+            sources[all_sources[i].id] = source;
         }
+        Memory.rooms[name_room].sources = sources;
     }
 }
-
-function make_id()
-{
-    var text = "";
-    var possible = "abcdefghijklmnopqrstuvwxyz0123456789";
-
-    for( var i=0; i < 25; i++ )
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-
-    return text;
-}
-
 
 //TODO Alle Jobs hinzufügen
 function calc_order(code, tier, prio) {
@@ -491,8 +316,7 @@ function calc_order(code, tier, prio) {
     order.planned = false;
     order.spawner = false;
     order.prod = false;
-    order.replacement = false;
-    
+
     if(code == JOB_MINER) {
         order.job = code;
         if(tier == 0) {
@@ -541,7 +365,6 @@ function calc_order(code, tier, prio) {
             return undefined
         }
     }
-
     log(1, [order.job, ' LV', tier, ' wird geordert']);
     return order;
 }
@@ -549,8 +372,47 @@ function calc_order(code, tier, prio) {
 function add_body(count, parts) {
     var sum = parts;
 
-    for (i = 1; i < count; i++) {
+    for (let i = 1; i < count; i++) {
         sum = sum.concat(parts);
     }
     return sum;
 }
+
+function make_id() {
+    var text = "";
+    var possible = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+    for( var i=0; i < 25; i++ )
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+    return text;
+}
+
+
+function add_drops_energy(room_name) {
+    if(!Memory.rooms[room_name].drops) {
+        Memory.rooms[room_name].drops = {};
+    }
+    if(!Memory.rooms[room_name].drops.energy) {
+        Memory.rooms[room_name].drops.energy = {};
+    }
+    if(!Memory.rooms[room_name].drops.resources) {
+        Memory.rooms[room_name].drops.resources = {};
+    }
+
+    var all_energy = Game.rooms[room_name].find(FIND_DROPPED_ENERGY);
+
+    for(var i in all_energy) {
+        if(!Memory.rooms[room_name].drops.energy[all_energy[i].id]) {
+            Memory.rooms[room_name].drops.energy[all_energy[i].id] = all_energy[i];
+        }
+    }
+}
+
+
+
+
+
+
+
+module.exports = helper;

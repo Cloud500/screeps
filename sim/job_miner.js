@@ -1,4 +1,5 @@
-log -51
+//log -51
+var move = require('move');
 module.exports = function(name) {
     
     log(-51,['Miner ', name, ' ablauf']);
@@ -17,12 +18,19 @@ module.exports = function(name) {
                 log(-51,['Entfernung zum Target: ', creep.pos.getRangeTo(gobi(miner.target).pos)]);
                 if(creep.pos.getRangeTo(gobi(miner.target).pos) > 1) {
                     log(-51,['Creep bewegt sich zum Target', miner.target]);
-                    creep.moveTo(gobi(miner.target).pos);
-
+                    //creep.moveTo(gobi(miner.target).pos);
+                    move.goTo(creep ,gobi(miner.target))
                 } else {
                     log(-51,['Creep Harvestet das Target', miner.target]);
                     creep.harvest(gobi(miner.target));
                 }
+            }
+        }
+        if(calc_spawn_time(miner.room, PARTS_MINER) + 10 >= creep.ticksToLive) {
+            if(miner.replacementOrder == false) {
+                console.log('Miner ' + name + ' Stirbt bald');
+                miner.replacementOrder = create(miner.room, JOB_MINER, calc_spawn_tier(miner.room, PARTS_MINER), 0)
+                log(-51,['Miner ersatz Order: ', miner.replacementOrder]);
             }
         }
     }
