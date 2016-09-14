@@ -8,6 +8,10 @@ module.exports = function(name) {
     log(-55,['engineer ', ots(engineer)]);
     log(-55,['Creep ', ots(creep)]);
 
+    if(!engineer.targetMem) {
+        engineer.targetMem = false;
+    }
+
     if(creep) {
         if (creep.spawning == false) {
             if (engineer.target == false) {
@@ -19,9 +23,27 @@ module.exports = function(name) {
                     log(-55,['Target gesetzt ', engineer.target]);
                 }
                 if(creep.carry.energy > 0) {
+                    //Überschreiben eines Targets wenn noch nicht 100% fertig
+                    if(engineer.targetMem != false) {
+                        if(gobi(engineer.targetMem)) {
+                            if(gobi(engineer.targetMem).hits < gobi(engineer.targetMem).hitsMax) {
+                                engineer.target = engineer.targetMem
+                                engineer.typ = 'engineering';
+                                return;
+                            } else {
+                                engineer.targetMem = false;
+                            }
+                        }
+                        else {
+                            engineer.targetMem = false;
+                        }
+                    }
                     //Target defekte Konstruktion
                     engineer.target = find_next_engineertarget(creep.room.name);
-                    engineer.typ = 'engineering';
+                    if(engineer.target != false) {
+                        engineer.targetMem = engineer.target
+                        engineer.typ = 'engineering';
+                    }
                     //Wenn keine defekte Konstruktion gefunden, schauen ob es sich lohnt weiter energie zu sammeln
                     if(engineer.target == false &&creep.carry.energy < creep.carryCapacity) {
                         log(-55,['Kein Bauplatz gefunden, sammle weiter energie']);
@@ -76,7 +98,7 @@ module.exports = function(name) {
 function find_next_engineertarget(room_name, prio) {
     prio = prio || 0;
     var targets = Game.rooms[room_name].find(FIND_STRUCTURES, { filter: function(struct) {
-        if(struct.hits < ((struct.hitsMax / 4) * 3)) {
+        if(struct.hits < (struct.hitsMax / 2)) {
             return struct;
         }
     }});
