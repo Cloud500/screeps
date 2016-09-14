@@ -17,7 +17,7 @@ module.exports = function(name) {
             }
             else {
                 log(-53,['Entfernung zum Target: ', creep.pos.getRangeTo(gobi(upgrader.target).pos)]);
-                if(creep.pos.getRangeTo(gobi(upgrader.target).pos) > 1 || creep.pos.getRangeTo(gobi(upgrader.target).pos) > 2) {
+                if(creep.pos.getRangeTo(gobi(upgrader.target).pos) > 2) {
                     log(-53,['Creep bewegt sich zum Target', upgrader.target]);
                     //creep.moveTo(gobi(upgrader.target).pos);
                     move.goTo(creep, gobi(upgrader.target));
