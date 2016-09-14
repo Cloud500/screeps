@@ -32,6 +32,7 @@ var minerRun = require('job_miner');
 var transporterRun = require('job_transporter');
 var upgraderRun = require('job_upgrader');
 var builderRun = require('job_builder');
+var engineerRun = require('job_engineer');
 module.exports.loop = function () {
     //return;
     
@@ -51,7 +52,6 @@ module.exports.loop = function () {
             helper.scanSpawns(Game.spawns[name_spawns].id);
         }
     }
-
 
     for(let i in Memory.empire.citys) {
         var name_room = Memory.empire.citys[i];
@@ -87,7 +87,11 @@ module.exports.loop = function () {
                 for(let i in memory_room.worker.builder) {
                     builderRun(memory_room.worker.builder[i]);
                 }
+                for(let i in memory_room.worker.engineer) {
+                    engineerRun(memory_room.worker.engineer[i])
+                }
             }
+            
         }
         Memory.rooms[name_room].controler.level = Game.rooms[name_room].controller.level
     }

@@ -66,10 +66,10 @@ module.exports = function(name) {
     }
 };
 
-function find_next_build_target(room_name, prio) {
+function find_next_engineertarget(room_name, prio) {
     prio = prio || 0;
-    var targets = Game.rooms[room_name].find(FIND_MY_STRUCTURES, { filter: function(struct) {
-        if(struct.hits < struct.hitsMax) {
+    var targets = Game.rooms[room_name].find(FIND_STRUCTURES, { filter: function(struct) {
+        if(struct.hits < ((struct.hitsMax / 4) * 3)) {
             return struct;
         }
     }});
@@ -98,7 +98,7 @@ function find_next_build_target(room_name, prio) {
         return false;
     }
     else {
-        return find_next_build_target(room_name, prio + 1);
+        return find_next_engineertarget(room_name, prio + 1);
     }
 }
 
