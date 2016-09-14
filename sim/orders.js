@@ -79,7 +79,7 @@ module.exports = function(name_room) {
         return;
     }
 
-    if((count_transporter < (count_miner + count_upgrader)/3) || (count_upgrader >= count_transporter) ) {
+    if((count_transporter < (count_miner + count_upgrader)/2) || (count_upgrader >= count_transporter) ) {
         log(-30, ['Order Transporter da die Quote nicht passt']);
         create(name_room, JOB_TRANSPORTER, calc_spawn_tier(name_room, PARTS_MINER), 2);
         return;
@@ -91,17 +91,17 @@ module.exports = function(name_room) {
         return;
     }
 
-    if(count_upgrader > 0 && count_upgrader < Memory.rooms[name_room].controler.level * 2) {
+    if(count_upgrader > 0 && count_upgrader < Memory.rooms[name_room].controler.level * 2 && count_upgrader < 4) {
         create(name_room, JOB_UPGRADER, calc_spawn_tier(name_room, PARTS_UPGRADER), 2);
         return;
     }
 
-    if(count_builder > 0 && count_builder < Memory.rooms[name_room].controler.level) {
+    if(count_builder > 0 && count_builder < Memory.rooms[name_room].controler.level && count_builder < 4) {
         log(-30, ['Order Upgrader da nicht vorhanden']);
         create(name_room, JOB_BUILDER , calc_spawn_tier(name_room, PARTS_BUILDER), 4);
         return;
     }
-    if(count_engineer < Memory.rooms[name_room].controler.level && Game.rooms[name_room].energyCapacityAvailable >= 400) {
+    if(count_engineer < Memory.rooms[name_room].controler.level && Game.rooms[name_room].energyCapacityAvailable >= 400 && count_engineer < 4) {
         log(-30, ['Order Upgrader']);
         create(name_room, JOB_ENGINEER , calc_spawn_tier(name_room, PARTS_ENGINEER), 3);
         return;
