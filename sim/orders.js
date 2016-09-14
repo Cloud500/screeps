@@ -8,6 +8,7 @@ module.exports = function(name_room) {
     var transporters = Memory.rooms[name_room].worker.transporter;
     var upgraders = Memory.rooms[name_room].worker.upgrader;
     var builders = Memory.rooms[name_room].worker.builder;
+    var engineers = Memory.rooms[name_room].worker.engineer;
 
     var order_list = {};
 
@@ -15,6 +16,7 @@ module.exports = function(name_room) {
     var count_transporter = 0;
     var count_upgrader = 0;
     var count_builder = 0;
+    var count_engineer = 0;
 
     var count_source_spots = 0;
 
@@ -28,6 +30,7 @@ module.exports = function(name_room) {
     count_transporter = count(transporters) + order_list.transporter.count;
     count_upgrader = count(upgraders) + order_list.upgrader.count;
     count_builder = count(builders) + order_list.builder.count;
+    count_engineer = count(engineers) + order_list.engineer.count;
 
     log(-30, ['Erstelle Summe der Souce Spots']);
     count_source_spots = Memory.rooms[name_room].sourceSpotsSave;
@@ -36,6 +39,7 @@ module.exports = function(name_room) {
     log(-30, ['count_transporter ', count_transporter]);
     log(-30, ['count_upgrader ', count_upgrader]);
     log(-30, ['count_builder ', count_builder]);
+    log(-30, ['count_engineer ', count_engineer]);
     log(-30, ['count_source_spots ', count_source_spots]);
 
     //Start & Fallback wenn keine Miner und Transporter mehr da sind
@@ -45,11 +49,13 @@ module.exports = function(name_room) {
         log(-30, ['Lösche alle nicht zugeordnete Orders']);
         del_free_orders(name_room);
 
+        //TODO Alle Jobs hinzufügen
         log(-30, ['Lösche alle zugeordnete aber nicht in Produktion befindlichen Order']);
         del_planned_orders(order_list.miner.planned)
         del_planned_orders(order_list.transporter.planned)
         del_planned_orders(order_list.upgrader.planned)
         del_planned_orders(order_list.builder.planned)
+        del_planned_orders(order_list.engineer.planned)
 
         log(-30, ['Erstelle die Notfallorders']);
         create(name_room, JOB_MINER,0,0);
@@ -60,6 +66,7 @@ module.exports = function(name_room) {
     }
 
     //Schaue was so gebaut werden kann
+    //TODO Alle Jobs hinzufügen
     if(count_upgrader == 0) {
         log(-30, ['Order Upgrader da nicht vorhanden']);
         create(name_room, JOB_UPGRADER,0,1);
@@ -91,7 +98,12 @@ module.exports = function(name_room) {
 
     if(count_builder > 0 && count_builder < Memory.rooms[name_room].controler.level) {
         log(-30, ['Order Upgrader da nicht vorhanden']);
-        create(name_room, JOB_BUILDER , calc_spawn_tier(name_room, PARTS_BUILDER), 3);
+        create(name_room, JOB_BUILDER , calc_spawn_tier(name_room, PARTS_BUILDER), 4);
+        return;
+    }
+    if(count_engineer < Memory.rooms[name_room].controler.level && Game.rooms[name_room].energyCapacityAvailable >= 400) {
+        log(-30, ['Order Upgrader']);
+        create(name_room, JOB_ENGINEER , calc_spawn_tier(name_room, PARTS_ENGINEER), 3);
         return;
     }
 };
@@ -111,21 +123,25 @@ function order(source) {
     order.transporter = {};
     order.upgrader = {};
     order.builder = {};
+    order.engineer = {};
 
     order.miner.count = 0;
     order.transporter.count = 0;
     order.upgrader.count = 0;
     order.builder.count = 0;
+    order.engineer.count = 0;
 
     order.miner.free = {};
     order.transporter.free = {};
     order.upgrader.free = {};
     order.builder.free = {};
+    order.engineer.free = {};
 
     order.miner.planned = {};
     order.transporter.planned = {};
     order.upgrader.planned = {};
     order.builder.planned = {};
+    order.engineer.planned = {};
 
 
     for(var id in source) {
@@ -176,6 +192,17 @@ function order(source) {
                 order.builder.planned[id] = memory;
             }
             order.builder.count++;
+        }
+        if (memory.job == JOB_ENGINEER && memory.prod == false) {
+            if (memory.planned == false) {
+                log(-30, ['Order memory Free']);
+                order.engineer.free[id] = memory;
+            }
+            else {
+                log(-30, ['Order memory Planned']);
+                order.engineer.planned[id] = memory;
+            }
+            order.engineer.count++;
         }
     }
     log(-30, ['order ', ots(order)]);

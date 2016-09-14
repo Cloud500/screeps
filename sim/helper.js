@@ -209,12 +209,15 @@ const helper = {
             Memory.rooms[name_room].controler.level = Game.rooms[name_room].controller.level;
             Memory.roomCount ++;
         }
+        //TODO Alle Jobs hinzufügen
         if(!Memory.rooms[name_room].worker) {
             Memory.rooms[name_room].worker = {};
             Memory.rooms[name_room].worker.miner = [];
             Memory.rooms[name_room].worker.upgrader = [];
             Memory.rooms[name_room].worker.transporter = [];
             Memory.rooms[name_room].worker.builder = [];
+            Memory.rooms[name_room].worker.engineer = [];
+            
         }
         
         if (Game.rooms[name_room].controller.my) {
@@ -360,6 +363,18 @@ function calc_order(code, tier, prio) {
         }
         else if(tier > 0 && tier < 11) {
             order.parts = add_body(tier, PARTS_BUILDER);
+        }
+        else {
+            return undefined
+        }
+    }
+    if(code == JOB_ENGINEER) {
+        order.job = code;
+        if(tier == 0) {
+            order.parts = [MOVE, CARRY, WORK];
+        }
+        else if(tier > 0 && tier < 11) {
+            order.parts = add_body(tier, PARTS_ENGINEER);
         }
         else {
             return undefined

@@ -80,6 +80,8 @@ function prod_order(spawn, order) {
         case JOB_BUILDER:
             Memory.rooms[name_room].worker.builder.push(name);
             break;
+        case JOB_ENGINEER:
+            Memory.rooms[name_room].worker.engineer.push(name);
     }
 }
 
@@ -96,8 +98,6 @@ function count(dict) {
 }
 
 function find_order(id_spawn, memory_orders, prio) {
-    //TODO Order nach Prioritäten staffeln
-
     if(count(memory_orders) < 1) {
         log(-41, ['Keine Order vorhanden']);
         return false;

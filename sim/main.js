@@ -7,6 +7,10 @@ global.JOB_UPGRADER = 'upgrader';
 global.PARTS_UPGRADER = [MOVE, CARRY, WORK, WORK];
 global.JOB_BUILDER = 'builder';
 global.PARTS_BUILDER = [MOVE, MOVE, CARRY, CARRY, WORK];
+global.JOB_ENGINEER = 'engineer';
+global.PARTS_ENGINEER = [MOVE, MOVE, CARRY, CARRY, WORK, WORK];
+
+
 
 
 var helper = require('helper');
@@ -95,6 +99,7 @@ module.exports.loop = function () {
         if(!Game.creeps[name_creep]) {
             console.log('Toter Creep');
 
+            //TODO Alle Jobs hinzufügen
             if(Memory.creeps[name_creep].job == JOB_MINER) {
                 let index = Memory.rooms[Memory.creeps[name_creep].room].worker.miner.indexOf(name_creep);
                 Memory.rooms[Memory.creeps[name_creep].room].worker.miner.splice(index, 1);
@@ -113,6 +118,10 @@ module.exports.loop = function () {
             if(Memory.creeps[name_creep].job == JOB_BUILDER) {
                 let index = Memory.rooms[Memory.creeps[name_creep].room].worker.builder.indexOf(name_creep);
                 Memory.rooms[Memory.creeps[name_creep].room].worker.builder.splice(index, 1);
+            }
+            if(Memory.creeps[name_creep].job == JOB_ENGINEER) {
+                let index = Memory.rooms[Memory.creeps[name_creep].room].worker.engineer.indexOf(name_creep);
+                Memory.rooms[Memory.creeps[name_creep].room].worker.engineer.splice(index, 1);
             }
 
             delete Memory.creeps[name_creep];
