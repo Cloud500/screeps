@@ -32,12 +32,19 @@ module.exports = function(name) {
                 }
             }
             else {
+                var dist = 0;
+                if(engineer.typ == 'engineering') {
+                    dist = 2;
+                }
+                else {
+                    dist = 1;
+                }
                 if(!gobi(engineer.target)) {
                     log(-55,['Target defekt, resette']);
                     log(1, ['ERROR: Creep Target nicht korrekt Creep: ', creep, ' Target ID: ', engineer.target]);
                     engineer.target = false;
                 }
-                else if (creep.pos.getRangeTo(gobi(engineer.target).pos) > 2) {
+                else if (creep.pos.getRangeTo(gobi(engineer.target).pos) > dist) {
                     log(-55,['Entfernung zum Target: ', creep.pos.getRangeTo(gobi(engineer.target).pos)]);
                     log(-55,['Creep bewegt sich zum Target ', engineer.target]);
                     //creep.moveTo(gobi(engineer.target).pos);
