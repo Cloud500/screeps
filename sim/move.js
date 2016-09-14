@@ -136,7 +136,7 @@ function pathisBlocked(creep, dir) {
         posd = new RoomPosition(pos.x -1, pos.y +1, pos.roomName);
     }
 
-
+    //TODO Straßen ignorieren
     var terrain = Game.map.getTerrainAt(posd);
     var struc = posd.lookFor(LOOK_STRUCTURES);
     var cons = posd.lookFor(LOOK_CONSTRUCTION_SITES);
