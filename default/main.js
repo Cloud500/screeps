@@ -9,6 +9,7 @@
 //TODO Healer Creeps erstellen
 //TODO Conqueror Creeps erstellen
 //TODO Algorythmus für die Tier Produktion
+//Hallo Welt
 
 global.logging = 1;
 
@@ -39,22 +40,21 @@ module.exports.loop = function () {
     global.calc_spawn_tier = helper.calc_spawn_tier;
     global.calc_spawn_time = helper.calc_spawn_time;
 
-
-
+    helper.
 
     //Baue Struktur
     helper.check_memory();
     helper.build_structure();
     helper.clean_structure();
     helper.upgrade_structure();
-    
+
 
     //Order Verwaltung
     orders();
-    
+
     //Raumverwaltung
     rooms(Game.rooms);
-    
+
     //Creeps ihre Jobs ausführen lassen
     jobs();
 
